@@ -1,0 +1,27 @@
+export type AuthStackParamList = {
+    Login: undefined;
+    Onboarding: { step: number } | undefined;
+    KYCUpload: undefined;
+    VehicleSetup: undefined;
+};
+
+export type DriverTabParamList = {
+    DriverHome: undefined;
+    MyTrips: undefined;
+    DriverProfile: undefined;
+    MyVehicles: undefined;
+};
+
+export type AdminTabParamList = {
+    AdminHome: undefined;
+    ManageBookings: undefined;
+    DriverList: undefined;
+    AdminProfile: undefined;
+};
+
+export type RootStackParamList = {
+    Auth: undefined;
+    DriverApp: undefined;
+    AdminApp: undefined;
+    Loading: undefined;
+};
