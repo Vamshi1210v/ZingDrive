@@ -27,7 +27,7 @@ import { supabase } from '../../api/supabase';
 
 const { width, height } = Dimensions.get('window');
 
-const LoginScreen = () => {
+const LoginScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -165,7 +165,9 @@ const LoginScreen = () => {
                     >
                         <Text style={styles.footerText}>
                             Don't have an account?{' '}
-                            <Text style={styles.link}>Sign Up</Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                                <Text style={styles.link}>Sign Up</Text>
+                            </TouchableOpacity>
                         </Text>
                     </Animated.View>
                 </ScrollView>

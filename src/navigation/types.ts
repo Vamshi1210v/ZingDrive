@@ -1,5 +1,7 @@
 export type AuthStackParamList = {
     Login: undefined;
+    Signup: undefined;
+    KYCOnboarding: undefined;
     Onboarding: { step: number } | undefined;
     KYCUpload: undefined;
     VehicleSetup: undefined;
@@ -23,5 +25,7 @@ export type RootStackParamList = {
     Auth: undefined;
     DriverApp: undefined;
     AdminApp: undefined;
+    AddCar: undefined;
+    KYCOnboarding: undefined;
     Loading: undefined;
 };

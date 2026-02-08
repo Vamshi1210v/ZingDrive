@@ -6,6 +6,10 @@ import { DriverTabParamList } from './types';
 import { Colors, Typography } from '../theme';
 import { View, Text, Platform } from 'react-native';
 
+import { MyTripsScreen } from '../screens/driver/MyTripsScreen';
+import { ProfileScreen } from '../screens/driver/ProfileScreen';
+import { MyVehiclesScreen } from '../screens/driver/MyVehiclesScreen';
+
 const Tab = createBottomTabNavigator<DriverTabParamList>();
 
 const Placeholder = (name: string) => () => (
@@ -45,7 +49,7 @@ export const DriverNavigator = () => {
             />
             <Tab.Screen
                 name="MyTrips"
-                component={Placeholder('My Trips')}
+                component={MyTripsScreen}
                 options={{
                     tabBarLabel: 'Trips',
                     tabBarIcon: ({ color }) => <ClipboardList color={color} size={24} />,
@@ -53,7 +57,7 @@ export const DriverNavigator = () => {
             />
             <Tab.Screen
                 name="MyVehicles"
-                component={Placeholder('Vehicles')}
+                component={MyVehiclesScreen}
                 options={{
                     tabBarLabel: 'Vehicles',
                     tabBarIcon: ({ color }) => <Car color={color} size={24} />,
@@ -61,7 +65,7 @@ export const DriverNavigator = () => {
             />
             <Tab.Screen
                 name="DriverProfile"
-                component={Placeholder('Profile')}
+                component={ProfileScreen}
                 options={{
                     tabBarLabel: 'Profile',
                     tabBarIcon: ({ color }) => <User color={color} size={24} />,

@@ -7,6 +7,8 @@ import { RootStackParamList } from './types';
 import { Colors, Typography } from '../theme';
 import { AuthNavigator } from './AuthNavigator';
 import { DriverNavigator } from './DriverNavigator';
+import { AddCarScreen } from '../screens/driver/AddCarScreen';
+import { KYCOnboardingScreen } from '../screens/auth/KYCOnboardingScreen';
 
 // Placeholder Navigators (To be implemented)
 const AdminPlaceholder = () => (
@@ -22,6 +24,8 @@ export const RootNavigator = () => {
     const [loading, setLoading] = useState(true);
     const [session, setSession] = useState<any>(null);
     const [role, setRole] = useState<'admin' | 'driver' | null>(null);
+    const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
+    const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected'>('pending');
 
     useEffect(() => {
         // 1. Check current session
@@ -48,11 +52,15 @@ export const RootNavigator = () => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('role, onboarding_completed, kyc_status')
                 .eq('id', userId)
                 .single();
 
-            if (data) setRole(data.role as 'admin' | 'driver');
+            if (data) {
+                setRole(data.role as 'admin' | 'driver');
+                setIsOnboarded(!!data.onboarding_completed);
+                setKycStatus(data.kyc_status || 'pending');
+            }
         } catch (err) {
             console.error('Role fetch error:', err);
         } finally {
@@ -68,6 +76,8 @@ export const RootNavigator = () => {
         );
     }
 
+    // ... rest of the file
+
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
@@ -75,8 +85,13 @@ export const RootNavigator = () => {
                     <Stack.Screen name="Auth" component={AuthNavigator} />
                 ) : role === 'admin' ? (
                     <Stack.Screen name="AdminApp" component={AdminPlaceholder} />
+                ) : !isOnboarded ? (
+                    <Stack.Screen name="KYCOnboarding" component={KYCOnboardingScreen} />
                 ) : (
-                    <Stack.Screen name="DriverApp" component={DriverNavigator} />
+                    <>
+                        <Stack.Screen name="DriverApp" component={DriverNavigator} />
+                        <Stack.Screen name="AddCar" component={AddCarScreen} />
+                    </>
                 )}
             </Stack.Navigator>
         </NavigationContainer>

@@ -1,32 +1,75 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { MapPin, Clock, ArrowRight, User, TrendingUp, ShieldCheck } from 'lucide-react-native';
+import { MapPin, Clock, ArrowRightLeft, User, TrendingUp, ShieldCheck, Banknote, Car, Calendar, Circle } from 'lucide-react-native';
 import { Colors, Spacing, Typography, Shadow } from '../../theme';
 import { ZingCard, ZingButton, ZingHeader } from '../../components/common';
+import { BookingCard } from '../../components/booking/BookingCard';
+import { Booking } from '../../types/booking';
+import { supabase } from '../../api/supabase';
 
-const MOCK_BOOKINGS = [
+const MOCK_BOOKINGS: Booking[] = [
     {
         id: '1',
-        pickup: 'Electronic City Phase 1',
-        drop: 'Indiranagar Metro Station',
-        time: 'In 15 mins',
-        estimate: '₹450',
-        status: 'open',
+        tripType: 'ONE WAY TRIP',
+        paymentMode: 'Paid by Cash',
+        pickup: 'Devikapuram, Tamil Nadu, India',
+        drop: 'Mundiyampakkam, Tamil Nadu, India',
+        price: '1900.3',
+        carType: 'HATCHBACK (AC)',
+        carCapacity: '4+1 seater',
+        distance: '73.0 KM',
+        extraKmRate: '11.2/km',
+        driverCharge: 'Included',
+        departureTime: 'Feb 07, 2026 09:00 pm',
     },
     {
         id: '2',
+        tripType: 'ROUND TRIP',
+        paymentMode: 'Paid by Wallet',
         pickup: 'Koramangala 4th Block',
         drop: 'Kempegowda Intl Airport',
-        time: 'In 45 mins',
-        estimate: '₹1,200',
-        status: 'open',
+        price: '2400.0',
+        carType: 'SUV (AC)',
+        carCapacity: '6+1 seater',
+        distance: '85.0 KM',
+        extraKmRate: '15.0/km',
+        driverCharge: 'Included',
+        departureTime: 'Feb 08, 2026 10:00 am',
     },
 ];
 
 export const BookingPoolScreen = () => {
     const insets = useSafeAreaInsets();
+    const [isVerified, setIsVerified] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkVerification = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('kyc_status')
+                    .eq('id', user.id)
+                    .single();
+                setIsVerified(data?.kyc_status === 'verified');
+            }
+        };
+        checkVerification();
+    }, []);
+
+    const handleAccept = (bookingId: string) => {
+        if (!isVerified) {
+            Alert.alert(
+                "Verification Required",
+                "Your account is currently under verification. You will be able to accept rides once your documents are approved.",
+                [{ text: "OK" }]
+            );
+            return;
+        }
+        // Proceed with acceptance logic
+    };
 
     const renderStatCard = (title: string, value: string, icon: React.ReactNode, delay: number) => (
         <Animated.View
@@ -43,46 +86,13 @@ export const BookingPoolScreen = () => {
         </Animated.View>
     );
 
-    const renderBookingItem = ({ item, index }: { item: typeof MOCK_BOOKINGS[0], index: number }) => (
-        <Animated.View entering={FadeInDown.delay(400 + index * 100).duration(600).springify()}>
-            <ZingCard variant="glass" padding="lg" style={styles.bookingCard}>
-                <View style={styles.bookingHeader}>
-                    <View style={styles.statusPill}>
-                        <View style={styles.statusDot} />
-                        <Text style={styles.statusText}>PENDING</Text>
-                    </View>
-                    <Text style={styles.estimateText}>{item.estimate}</Text>
-                </View>
-
-                <View style={styles.addressContainer}>
-                    <View style={styles.pathLine} />
-                    <View style={styles.addressRow}>
-                        <View style={[styles.dot, { backgroundColor: Colors.info }]} />
-                        <Text style={styles.addressText} numberOfLines={1}>{item.pickup}</Text>
-                    </View>
-                    <View style={[styles.addressRow, { marginTop: Spacing.md }]}>
-                        <View style={[styles.dot, { backgroundColor: Colors.primary }]} />
-                        <Text style={styles.addressText} numberOfLines={1}>{item.drop}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.bookingFooter}>
-                    <View style={styles.timeRow}>
-                        <Clock size={16} color={Colors.textMuted} />
-                        <Text style={styles.timeText}>{item.time}</Text>
-                    </View>
-                    <ZingButton
-                        title="Accept"
-                        variant="primary"
-                        onPress={() => { }}
-                        style={styles.acceptBtn}
-                        textStyle={styles.acceptBtnText}
-                    />
-                </View>
-            </ZingCard>
-        </Animated.View>
+    const renderBookingItem = ({ item, index }: { item: Booking, index: number }) => (
+        <BookingCard
+            item={item}
+            index={index}
+            buttonTitle="ACCEPT"
+            onButtonPress={() => handleAccept(item.id)}
+        />
     );
 
     return (
@@ -106,7 +116,7 @@ export const BookingPoolScreen = () => {
                     <View style={styles.listHeader}>
                         <View style={styles.statsRow}>
                             {renderStatCard("Today's Earnings", "₹4.2k", <TrendingUp size={18} color={Colors.success} />, 100)}
-                            {renderStatCard("Verified", "Active", <ShieldCheck size={18} color={Colors.info} />, 200)}
+                            {renderStatCard("Status", isVerified ? "Verified" : "Pending", <ShieldCheck size={18} color={isVerified ? Colors.success : Colors.warning} />, 200)}
                         </View>
 
                         <Text style={styles.sectionTitle}>Available Jobs</Text>
@@ -124,7 +134,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     scrollContent: {
-        paddingHorizontal: Spacing.lg,
+        paddingHorizontal: Spacing.md,
         paddingBottom: Spacing.xxl,
     },
     listHeader: {
@@ -154,93 +164,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         ...Typography.h3,
         marginBottom: Spacing.md,
-    },
-    bookingCard: {
-        marginBottom: Spacing.md,
-    },
-    bookingHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: Spacing.lg,
-    },
-    statusPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 171, 0, 0.1)',
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: Spacing.xs - 2,
-        borderRadius: 20,
-    },
-    statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: Colors.warning,
-        marginRight: 6,
-    },
-    statusText: {
-        ...Typography.caption,
-        color: Colors.warning,
-        fontSize: 10,
-    },
-    estimateText: {
-        ...Typography.h3,
-        color: Colors.success,
-    },
-    addressContainer: {
-        marginBottom: Spacing.lg,
-        position: 'relative',
-    },
-    pathLine: {
-        position: 'absolute',
-        top: 10,
-        left: 3.5,
-        bottom: 10,
-        width: 1,
-        backgroundColor: Colors.glassOutline,
-        borderStyle: 'dashed',
-    },
-    addressRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: Spacing.md,
-    },
-    addressText: {
-        ...Typography.body,
-        flex: 1,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: Colors.glassOutline,
-        marginBottom: Spacing.lg,
-    },
-    bookingFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    timeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    timeText: {
-        ...Typography.bodySmall,
-        color: Colors.textMuted,
-        marginLeft: Spacing.xs,
-    },
-    acceptBtn: {
-        height: 40,
-        paddingHorizontal: Spacing.lg,
-        borderRadius: 12,
-    },
-    acceptBtnText: {
-        fontSize: 14,
     },
     profileBtn: {
         width: 40,
